@@ -1,19 +1,29 @@
 package ru.storageApp.service;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.storageApp.config.BotConfig;
+import ru.storageApp.controller.UpdateController;
 
 
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
     final BotConfig config;
 
-    public TelegramBot(BotConfig botConfig) {
+    private UpdateController updateController;
+
+
+    public TelegramBot(BotConfig botConfig, UpdateController updateController) {
         this.config = botConfig;
+        this.updateController = updateController;
+    }
+
+    @PostConstruct
+    public void init() {
+        updateController.registerBot(this);
     }
 
     @Override
@@ -32,20 +42,12 @@ public class TelegramBot extends TelegramLongPollingBot {
         if (update.hasMessage() && update.getMessage().hasText()) {
             String message = update.getMessage().getText();
 
-            switch (update.getMessage().getText()) {
-                case "/start":
-                    sendMessage(chatId, "Bot has been started");
-                default: sendMessage(chatId, "Zdarova zaebal");
-            }
+            System.out.println(message);
         }
     }
 
-    private void sendMessage(long chatId, String message) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
-        sendMessage.setText(message);
-        try {
-            execute(sendMessage);
-        } catch (TelegramApiException e){}
+
+    public void sendAnswerMessage(SendMessage sendMessage) {
+        System.out.println(sendMessage.getText());
     }
 }
