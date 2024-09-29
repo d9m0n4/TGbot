@@ -15,7 +15,7 @@ import static ru.storageApp.model.RabbitQueue.*;
 @Log4j2
 public class UpdateController {
     private TelegramBot telegramBot;
-    private MessageUtils messageUtils;
+    private final MessageUtils messageUtils;
     private final UpdateProducer updateProducer;
 
     public UpdateController(MessageUtils messageUtils, UpdateProducer updateProducer) {
@@ -36,7 +36,7 @@ public class UpdateController {
         if (update.getMessage() != null) {
             distributeMessagesByType(update);
         } else {
-            log.error("Update is null" + update);
+            log.error("Update is null{}", update);
         }
     }
 
@@ -64,8 +64,10 @@ public class UpdateController {
 
     public void processPhotoMessage(Update update) {
         updateProducer.produce(PHOTO_MESSAGE_UPDATE ,update);
+        setFileReceivedView(update);
 
     }
+
 
     public void setUnsupportedMessageType(Update update) {
         var sendMessage = messageUtils.generateSendMessage(update, "Не верный тип сообщения");
@@ -74,5 +76,10 @@ public class UpdateController {
 
     private void setView(SendMessage sendMessage) {
         telegramBot.sendAnswerMessage(sendMessage);
+    }
+
+    private void setFileReceivedView(Update update) {
+        var sendMessage = messageUtils.generateSendMessage(update, "Файла загружен! Обработка...");
+        setView(sendMessage);
     }
 }
